@@ -1,0 +1,6 @@
+{
+    "url-loader": {
+        "exts": ["org"],
+        "limit": 10240
+    }
+}
