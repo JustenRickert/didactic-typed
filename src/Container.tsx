@@ -6,43 +6,40 @@ import { Canvas } from './Canvas'
 
 enum Actions {
   Add = 'ADD',
-  Toggle = 'TOGGLE'
+  Toggle = 'TOGGLE',
 }
 
-type ContainerActions =
-  | Action<Actions.Add, Point>
-  | Action<Actions.Toggle, boolean>
+type ContainerActions = Action<Actions.Add, Point> | Action<Actions.Toggle, boolean>
 
 type DrawContainer = typeof defaultState
 const defaultState = {
   isDrawing: false as boolean,
-  points: [] as Point[]
+  points: [] as Point[],
 }
 
-const addPointReducer = createReducer<Actions.Add, Point>(Actions.Add)(
-  (s: DrawContainer, p) =>
-    console.log('drawing', s) || {
-      ...s,
-      points: [...s.points, p]
-    }
+const addPointReducer = createReducer<Actions.Add, DrawContainer, Point>(Actions.Add)(
+  (s: DrawContainer, p) => ({
+    ...s,
+    points: [...s.points, p],
+  }),
 )
 
-const isDrawingReducer = createReducer<Actions.Toggle, boolean>(Actions.Toggle)(
-  (s: DrawContainer, shouldDraw: boolean) => ({
-    ...s,
-    isDrawing: shouldDraw
-  })
-)
+const isDrawingReducer = createReducer<Actions.Toggle, DrawContainer, boolean>(
+  Actions.Toggle,
+)((s, shouldDraw) => ({
+  ...s,
+  isDrawing: shouldDraw,
+}))
 
 const pointsReducer = reduceReducers(addPointReducer, isDrawingReducer)
 
 const addPoint = (point: Point) => ({
   type: Actions.Add,
-  payload: point
+  payload: point,
 })
 const shouldToggle = (yesOrNo: boolean) => ({
   type: Actions.Toggle,
-  payload: yesOrNo
+  payload: yesOrNo,
 })
 
 export class Container extends React.Component<{}, DrawContainer> {
@@ -52,19 +49,17 @@ export class Container extends React.Component<{}, DrawContainer> {
     const { isDrawing } = this.state
 
     return (
-      <div style={{ backgroundColor: 'red' }}>
+      <div style={{ backgroundColor: 'red', width: '100%', height: '100%' }}>
         <Canvas
           points={this.state.points}
           onMouseMove={e => {
             const { pageX: mouseX, pageY: mouseY } = e
             const {
               x: canvasLeft,
-              y: canvasTop
+              y: canvasTop,
             } = e.currentTarget.getBoundingClientRect() as DOMRect
             if (isDrawing) {
-              this.dispatch(
-                addPoint({ x: mouseX - canvasLeft, y: mouseY - canvasTop })
-              )
+              this.dispatch(addPoint({ x: mouseX - canvasLeft, y: mouseY - canvasTop }))
             }
           }}
           onMouseDown={() => this.dispatch(shouldToggle(true))}
