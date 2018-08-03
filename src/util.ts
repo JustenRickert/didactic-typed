@@ -5,6 +5,23 @@ export interface Point {
   y: number
 }
 
+const diff = ({ x: x1, y: y1 }: Point, { x: x2, y: y2 }: Point) => ({
+  x: x2 - x1,
+  y: y2 - y1,
+})
+const plus = ({ x: x1, y: y1 }: Point, { x: x2, y: y2 }: Point) => ({
+  x: x1 + x2,
+  y: y1 + y2,
+})
+const divide = ({ x, y }: Point, divisor: number) => ({
+  x: x / divisor,
+  y: y / divisor,
+})
+const times = ({ x, y }: Point, scalar: number) => ({
+  x: x * scalar,
+  y: y * scalar,
+})
+
 export interface Action<S extends string, P> {
   type: string
   payload: P
@@ -40,32 +57,6 @@ export const chunkWithOverlap = <T>(ts: T[]) =>
     },
     [] as T[][],
   )
-
-const diff = ({ x: x1, y: y1 }: Point, { x: x2, y: y2 }: Point) => ({
-  x: x2 - x1,
-  y: y2 - y1,
-})
-const plus = ({ x: x1, y: y1 }: Point, { x: x2, y: y2 }: Point) => ({
-  x: x1 + x2,
-  y: y1 + y2,
-})
-const divide = ({ x, y }: Point, divisor: number) => ({
-  x: x / divisor,
-  y: y / divisor,
-})
-const times = ({ x, y }: Point, scalar: number) => ({
-  x: x * scalar,
-  y: y * scalar,
-})
-
-// export const getCubicPolyControlPoints = (p1: Point, p2: Point, p3: Point) => {
-//   const midpoint0 = divide(plus(p1, p3), 2)
-//   const d0 = diff(p2, p3)
-//   const d1 = diff(p1, p2)
-//   const cp1 = plus(midpoint0, d0)
-//   const cp2 = plus(midpoint0, d1)
-//   return { cp1, cp2 }
-// }
 
 export const getCubicPolyControlPoints = (p1: Point, p2: Point, p3: Point) => {
   const { x: dx1, y: dy1 } = diff(p2, p1)

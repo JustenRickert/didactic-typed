@@ -1,5 +1,4 @@
 import * as React from 'react'
-// import { chunk } from 'lodash'
 
 import { Point, chunkWithOverlap, getCubicPolyControlPoints } from './util'
 
@@ -39,9 +38,9 @@ export class Canvas extends React.Component<MouseEventProps & { points: Point[] 
 
     ctx.clearRect(x, y, width, height)
 
-    for (const gram of chunkWithOverlap(points)) {
-      const [first, second = undefined, third = undefined] = gram
-
+    for (const [first, second = undefined, third = undefined] of chunkWithOverlap(
+      points,
+    )) {
       if (!second) {
         return
       } else if (!third) {
