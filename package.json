@@ -15,6 +15,7 @@
     "@types/react-dom": "^16.0.6",
     "@types/recompose": "^0.26.3",
     "lodash": "^4.17.10",
+    "perf_hooks": "0.0.1",
     "react": "^16.4.1",
     "react-dom": "^16.4.1",
     "recompose": "^0.28.1",

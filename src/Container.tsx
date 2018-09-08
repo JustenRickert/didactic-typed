@@ -1,73 +1,65 @@
 import * as React from 'react'
-import { compose, lifecycle, withState, withReducer } from 'recompose'
 
-import { Action, createReducer, Point, reduceReducers } from './util'
-import { Canvas } from './Canvas'
+import Player, { withFunctions, PlayerValue } from './player'
+import { createReducer, Position, plus } from './util'
+import InfoScreen from './InfoScreen'
 
-enum Actions {
-  Add = 'ADD',
-  Toggle = 'TOGGLE',
+import { MOVE_STEP_SIZE } from './constant'
+
+const defaultPlayerValue: PlayerValue = {
+  position: { x: 0, y: 0 },
+  rotation: 0
 }
 
-type ContainerActions = Action<Actions.Add, Point> | Action<Actions.Toggle, boolean>
-
-type DrawContainer = typeof defaultState
-const defaultState = {
-  isDrawing: false as boolean,
-  points: [] as Point[],
-}
-
-const addPointReducer = createReducer<Actions.Add, DrawContainer, Point>(Actions.Add)(
-  (s: DrawContainer, p) => ({
-    ...s,
-    points: [...s.points, p],
-  }),
+export const { Provider, Consumer } = React.createContext(
+  withFunctions(defaultPlayerValue)
 )
 
-const isDrawingReducer = createReducer<Actions.Toggle, DrawContainer, boolean>(
-  Actions.Toggle,
-)((s, shouldDraw) => ({
-  ...s,
-  isDrawing: shouldDraw,
-}))
+interface State {
+  player: Player
+}
 
-const pointsReducer = reduceReducers(addPointReducer, isDrawingReducer)
+export class Container extends React.Component<{}, State> {
+  state = { player: withFunctions(defaultPlayerValue) }
 
-const addPoint = (point: Point) => ({
-  type: Actions.Add,
-  payload: point,
-})
-const shouldToggle = (yesOrNo: boolean) => ({
-  type: Actions.Toggle,
-  payload: yesOrNo,
-})
+  componentDidMount() {
+    const keyEventMovements = [
+      {
+        key: 'keyright',
+        position: { x: MOVE_STEP_SIZE, y: 0 }
+      },
+      {
+        key: 'keyleft',
+        position: { x: -MOVE_STEP_SIZE, y: 0 }
+      },
+      {
+        key: 'keyup',
+        position: { x: 0, y: -MOVE_STEP_SIZE }
+      },
+      {
+        key: 'keydown',
+        position: { x: 0, y: MOVE_STEP_SIZE }
+      }
+    ]
 
-export class Container extends React.Component<{}, DrawContainer> {
-  state = defaultState
-
-  render() {
-    const { isDrawing } = this.state
-
-    return (
-      <div style={{ backgroundColor: 'red', width: '100%', height: '100%' }}>
-        <Canvas
-          points={this.state.points}
-          onMouseMove={e => {
-            const { pageX: mouseX, pageY: mouseY } = e
-            const {
-              x: canvasLeft,
-              y: canvasTop,
-            } = e.currentTarget.getBoundingClientRect() as DOMRect
-            if (isDrawing) {
-              this.dispatch(addPoint({ x: mouseX - canvasLeft, y: mouseY - canvasTop }))
-            }
-          }}
-          onMouseDown={() => this.dispatch(shouldToggle(true))}
-          onMouseUp={() => this.dispatch(shouldToggle(false))}
-        />
-      </div>
+    keyEventMovements.forEach(({ key, position }) =>
+      document.addEventListener(key, this.updatePlayerPosition(position))
     )
   }
 
-  dispatch = (action: ContainerActions) => this.setState(pointsReducer(action))
+  render() {
+    const { player } = this.state
+    return (
+      <Provider value={player}>
+        <div>hello</div>
+        <Consumer children={player => <InfoScreen value={player.value} />} />
+      </Provider>
+    )
+  }
+
+  updatePlayerPosition = (position: Position) => () =>
+    this.setState(
+      state => ({ player: state.player.withPosition(position) }),
+      () => console.log(this.state)
+    )
 }
