@@ -1,10 +1,12 @@
 import * as React from 'react'
 
 import Player, { withFunctions, PlayerValue } from './player'
-import { createReducer, Position, plus } from './util'
+import { createReducer, Position, plus, clamp } from './util'
 import InfoScreen from './InfoScreen'
 
-import { MOVE_STEP_SIZE } from './constant'
+import { ARROW_KEY_TO_POSITION_MAP } from './constant'
+
+const clamp5 = clamp([0, 5], [0, 5])
 
 const defaultPlayerValue: PlayerValue = {
   position: { x: 0, y: 0 },
@@ -20,31 +22,14 @@ interface State {
 }
 
 export class Container extends React.Component<{}, State> {
-  state = { player: withFunctions(defaultPlayerValue) }
+  readonly state: State = { player: withFunctions(defaultPlayerValue) }
 
   componentDidMount() {
-    const keyEventMovements = [
-      {
-        key: 'keyright',
-        position: { x: MOVE_STEP_SIZE, y: 0 }
-      },
-      {
-        key: 'keyleft',
-        position: { x: -MOVE_STEP_SIZE, y: 0 }
-      },
-      {
-        key: 'keyup',
-        position: { x: 0, y: -MOVE_STEP_SIZE }
-      },
-      {
-        key: 'keydown',
-        position: { x: 0, y: MOVE_STEP_SIZE }
-      }
-    ]
+    addEventListener('keydown', this.handleKeyEvent)
+  }
 
-    keyEventMovements.forEach(({ key, position }) =>
-      document.addEventListener(key, this.updatePlayerPosition(position))
-    )
+  componentWillUnmount() {
+    removeEventListener('keydown', this.handleKeyEvent)
   }
 
   render() {
@@ -57,9 +42,14 @@ export class Container extends React.Component<{}, State> {
     )
   }
 
-  updatePlayerPosition = (position: Position) => () =>
-    this.setState(
-      state => ({ player: state.player.withPosition(position) }),
-      () => console.log(this.state)
-    )
+  handleKeyEvent = (e: KeyboardEvent) => {
+    const { value: player } = this.state.player
+    const position: Position | undefined = ARROW_KEY_TO_POSITION_MAP[e.key]
+    if (position) {
+      this.updatePlayerPosition(clamp5(plus(player.position, position)))
+    }
+  }
+
+  updatePlayerPosition = (position: Position) =>
+    this.setState(state => ({ player: state.player.withPosition(position) }))
 }

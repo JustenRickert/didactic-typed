@@ -19,6 +19,17 @@ export const plus = (
   y: y1 + y2
 })
 
+export const clamp = (
+  [bottomX, topX]: [number, number],
+  [bottomY, topY]: [number, number]
+) => (position: Position) => {
+  const x =
+    position.x > topX ? topX : position.x < bottomX ? bottomX : position.x
+  const y =
+    position.y > topY ? topY : position.y < bottomY ? bottomY : position.y
+  return { ...position, x, y }
+}
+
 const divide = ({ x, y }: Position, divisor: number) => ({
   x: x / divisor,
   y: y / divisor
@@ -48,7 +59,6 @@ export const createReducer = <T extends string, S, P>(type: T) => (
   if (action.type === type) {
     return payloadReducer(state, action.payload)
   }
-
   return state
 }
 
