@@ -3,10 +3,11 @@ import * as React from 'react'
 import Player, { withFunctions, PlayerValue } from './player'
 import { createReducer, Position, plus, clamp } from './util'
 import InfoScreen from './InfoScreen'
+import Grid from './Grid'
 
 import { ARROW_KEY_TO_POSITION_MAP } from './constant'
 
-const clamp5 = clamp([0, 5], [0, 5])
+const clamp5 = clamp([0, 4], [0, 4])
 
 const defaultPlayerValue: PlayerValue = {
   position: { x: 0, y: 0 },
@@ -37,7 +38,14 @@ export class Container extends React.Component<{}, State> {
     return (
       <Provider value={player}>
         <div>hello</div>
-        <Consumer children={player => <InfoScreen value={player.value} />} />
+        <Consumer
+          children={player => (
+            <>
+              <InfoScreen value={player.value} />
+              <Grid player={player.value} dimensions={{ xMax: 5, yMax: 5 }} />
+            </>
+          )}
+        />
       </Provider>
     )
   }
