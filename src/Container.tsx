@@ -1,32 +1,69 @@
 import * as React from 'react'
+import { cloneDeep, range } from 'lodash'
+import { timer } from 'rxjs'
 
-import Player, { withFunctions, PlayerValue } from './player'
-import { createReducer, Position, plus, clamp } from './util'
+import Player, { withPosition } from './player'
+import Square, { updateValue, withRate } from './square'
+import {
+  createReducer,
+  plus,
+  clamp,
+  equals,
+  Evaluation,
+  Position
+} from './util'
 import InfoScreen from './InfoScreen'
 import Grid from './Grid'
 
-import { ARROW_KEY_TO_POSITION_MAP } from './constant'
+import { ARROW_KEY_TO_POSITION_MAP, BOARD_DIMENSIONS } from './constant'
 
-const clamp5 = clamp([0, 4], [0, 4])
+const clampBoard = clamp([0, BOARD_DIMENSIONS[0]], [0, BOARD_DIMENSIONS[1]])
 
-const defaultPlayerValue: PlayerValue = {
+const stubEvaluation: (or: 'rate' | 'value') => Evaluation = rateOrValue =>
+  cloneDeep({
+    quantity: rateOrValue === 'rate' ? 1 : 0,
+    valuePerQuantity: rateOrValue === 'value' ? 0.01 : 0.0001
+  })
+
+const defaultPlayerValue: Player = {
   position: { x: 0, y: 0 },
-  rotation: 0
+  rotation: 0,
+  squareRate: { quantity: 1, valuePerQuantity: 0.1 }
 }
 
-export const { Provider, Consumer } = React.createContext(
-  withFunctions(defaultPlayerValue)
-)
+const timeSource = timer(1000, 1000)
 
 interface State {
   player: Player
+  squares: Square[]
 }
 
 export class Container extends React.Component<{}, State> {
-  readonly state: State = { player: withFunctions(defaultPlayerValue) }
+  readonly state: State = {
+    player: defaultPlayerValue,
+    squares: range(BOARD_DIMENSIONS[0]).reduce(
+      (squareSquares, i) => {
+        const squares: Square[] = []
+        range(BOARD_DIMENSIONS[1]).forEach(j =>
+          squares.push({
+            position: { x: i, y: j },
+            value: stubEvaluation('value'),
+            rate: stubEvaluation('rate')
+          })
+        )
+        return [...squareSquares, ...squares]
+      },
+      [] as Square[]
+    )
+  }
 
   componentDidMount() {
     addEventListener('keydown', this.handleKeyEvent)
+
+    const timeSubscriber = timeSource.subscribe(_ => {
+      this.updatePlayerSquareRate()
+      this.updateSquaresValue()
+    })
   }
 
   componentWillUnmount() {
@@ -34,30 +71,43 @@ export class Container extends React.Component<{}, State> {
   }
 
   render() {
-    const { player } = this.state
+    const { squares, player } = this.state
     return (
-      <Provider value={player}>
-        <div>hello</div>
-        <Consumer
-          children={player => (
-            <>
-              <InfoScreen value={player.value} />
-              <Grid player={player.value} dimensions={{ xMax: 5, yMax: 5 }} />
-            </>
-          )}
+      <>
+        <InfoScreen player={player} squares={squares} />
+        <Grid
+          player={player}
+          squares={squares}
+          dimensions={{ xMax: BOARD_DIMENSIONS[0], yMax: BOARD_DIMENSIONS[1] }}
         />
-      </Provider>
+      </>
     )
   }
 
-  handleKeyEvent = (e: KeyboardEvent) => {
-    const { value: player } = this.state.player
-    const position: Position | undefined = ARROW_KEY_TO_POSITION_MAP[e.key]
-    if (position) {
-      this.updatePlayerPosition(clamp5(plus(player.position, position)))
-    }
+  updatePlayerSquareRate() {
+    this.setState(({ squares, player }) => ({
+      squares: squares.map(
+        s =>
+          equals(s.position, player.position)
+            ? withRate(s, plus(s.rate, player.squareRate))
+            : s
+      )
+    }))
   }
 
-  updatePlayerPosition = (position: Position) =>
-    this.setState(state => ({ player: state.player.withPosition(position) }))
+  updateSquaresValue() {
+    this.setState(({ squares }) => ({ squares: squares.map(updateValue) }))
+  }
+
+  updatePlayerPosition(position: Position) {
+    this.setState(state => ({ player: withPosition(state.player, position) }))
+  }
+
+  handleKeyEvent = (e: KeyboardEvent) => {
+    const { player } = this.state
+    const position = ARROW_KEY_TO_POSITION_MAP[e.key]
+    if (position) {
+      this.updatePlayerPosition(clampBoard(plus(player.position, position)))
+    }
+  }
 }

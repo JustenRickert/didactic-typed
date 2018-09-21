@@ -2,16 +2,24 @@ import * as React from 'react'
 import { range } from 'lodash'
 import styled from 'styled-components'
 
-import { PlayerValue } from './player'
+import Player from './player'
+import Square from './square'
 
-const GridStyle = styled.div`
+interface StyledGridProps {
+  columns: number
+}
+
+const StyledGrid = styled.div`
   display: grid;
   grid-gap: 1em;
   max-width: 8em;
-  grid-template-columns: repeat(5, 1fr);
+  grid-template-columns: repeat(
+    ${(props: StyledGridProps) => props.columns},
+    1fr
+  );
 `
 
-const Square = styled.div`
+const GridSquare = styled.div`
   display: flex;
   justify-content: center;
   align-items: center;
@@ -24,21 +32,22 @@ const Grid = ({
   player,
   dimensions: { xMax, yMax }
 }: {
-  player: PlayerValue
+  player: Player
+  squares: Square[]
   dimensions: { xMax: number; yMax: number }
 }) => (
-  <GridStyle>
+  <StyledGrid columns={xMax}>
     {range(xMax).map(i =>
       range(yMax).map(
         j =>
           player.position.x === j && player.position.y === i ? (
-            <Square children="me" />
+            <GridSquare children="me" />
           ) : (
-            <Square children="." />
+            <GridSquare children="" />
           )
       )
     )}
-  </GridStyle>
+  </StyledGrid>
 )
 
 export default Grid
