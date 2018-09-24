@@ -9,6 +9,9 @@ export type Square = {
 export const totalValue = ({ value: { quantity, valuePerQuantity } }: Square) =>
   quantity * valuePerQuantity
 
+export const totalRate = ({ rate: { quantity, valuePerQuantity } }: Square) =>
+  quantity * valuePerQuantity
+
 export const updateValue = (square: Square): Square => {
   const { value, rate } = square
   const delta = rate.valuePerQuantity * rate.quantity

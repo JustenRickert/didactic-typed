@@ -2,8 +2,8 @@ import * as React from 'react'
 import { cloneDeep, range } from 'lodash'
 import { timer } from 'rxjs'
 
-import Player, { withPosition } from './player'
-import Square, { updateValue, withRate } from './square'
+import Player, { withPosition } from './data/player'
+import Square, { updateValue, withRate } from './data/square'
 import {
   createReducer,
   plus,
@@ -12,8 +12,8 @@ import {
   Evaluation,
   Position
 } from './util'
-import InfoScreen from './InfoScreen'
-import Grid from './Grid'
+import InfoScreen from './components/InfoScreen'
+import Grid from './components/Grid'
 
 import { ARROW_KEY_TO_POSITION_MAP, BOARD_DIMENSIONS } from './constant'
 
@@ -22,7 +22,7 @@ const clampBoard = clamp([0, BOARD_DIMENSIONS[0]], [0, BOARD_DIMENSIONS[1]])
 const stubEvaluation: (or: 'rate' | 'value') => Evaluation = rateOrValue =>
   cloneDeep({
     quantity: rateOrValue === 'rate' ? 1 : 0,
-    valuePerQuantity: rateOrValue === 'value' ? 0.01 : 0.0001
+    valuePerQuantity: rateOrValue === 'value' ? 1 : 0.01
   })
 
 const defaultPlayerValue: Player = {

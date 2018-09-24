@@ -1,10 +1,10 @@
 import * as React from 'react'
 import { orderBy, take } from 'lodash'
 
-import Player from './player'
-import Square, { totalValue } from './square'
+import Player from '../data/player'
+import Square, { totalRate, totalValue } from '../data/square'
 
-const squaresTopFive = (squares: Square[]) =>
+const topFive = (squares: Square[]) =>
   take(orderBy(squares, totalValue, 'desc'), 5)
 
 const InfoScreen = ({
@@ -15,10 +15,11 @@ const InfoScreen = ({
   squares: Square[]
 }) => (
   <div>
-    {squaresTopFive(squares).map(s => (
+    {topFive(squares).map(s => (
       <div>
-        {`${s.position.x},${s.position.y} := `}
-        {`{ value: ${totalValue(s).toFixed(6)} }`}
+        {`${s.position.x},${s.position.y} is `}
+        {`{value: ${totalValue(s).toFixed(3)}, `}
+        {`rate: ${totalRate(s).toFixed(3)}}`}
       </div>
     ))}
     {player.position.x},
