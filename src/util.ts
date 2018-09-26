@@ -86,16 +86,17 @@ export interface Action<S extends string, P> {
   payload: P
 }
 
-export const createReducer = <T extends string, S, P>(type: T) => (
+export const createReducer = <T extends string, S, P>(
+  type: T,
   payloadReducer: (s: S, p: P) => S
-) => (action: Action<T, P>) => (state: S) => {
-  if (action.type === type) {
-    return payloadReducer(state, action.payload)
-  }
-  return state
+) => {
+  return (state: S, action: Action<T, P>) =>
+    action.type === type ? payloadReducer(state, action.payload) : state
 }
 
-export const reduceReducers = <S, P>(
-  ...reducers: ((a: Action<string, any>) => (s: S) => S)[]
-) => (action: Action<string, P>) => (state: S) =>
-  reducers.reduce((acc, r) => r(action)(acc), state)
+export const reduceReducers = <S, A extends Action<string, any>>(
+  ...reducers: ((state: S, a: Action<string, any>) => S)[]
+) => {
+  return (state: S, action: A) =>
+    reducers.reduce((acc, r) => r(acc, action), state)
+}

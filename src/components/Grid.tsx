@@ -51,14 +51,14 @@ const PlayerSquare = styled.div`
 const Player = ({
   player: { position: { x, y } },
   rowSize,
-  gridRef
+  gridNode
 }: {
   player: Player
   rowSize: number
-  gridRef: HTMLDivElement
+  gridNode: HTMLDivElement
 }) => {
-  const { top: topOffset, left: leftOffset } = gridRef.getBoundingClientRect()
-  const { top, left } = gridRef.children[
+  const { top: topOffset, left: leftOffset } = gridNode.getBoundingClientRect()
+  const { top, left } = gridNode.children[
     x + rowSize * y
   ].getBoundingClientRect() as ClientRect
   return (
@@ -67,7 +67,7 @@ const Player = ({
         transform: `translate(${left - leftOffset}px, ${top - topOffset}px)`,
         transition: 'all 300ms'
       }}
-      children={<div children="ME" />}
+      children={<div children="ME" />} // TODO: replace me with a cool icon of some kind! :)
     />
   )
 }
@@ -85,7 +85,7 @@ class Grid extends React.Component<{
     return (
       <Wrapper>
         {gridNode && (
-          <Player player={player} gridRef={gridNode} rowSize={xMax} />
+          <Player player={player} gridNode={gridNode} rowSize={xMax} />
         )}
         <StyledGrid innerRef={this.ref} columns={xMax}>
           {range(xMax * yMax).map(i => <GridSquare key={i} children="" />)}
