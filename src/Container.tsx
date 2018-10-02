@@ -47,18 +47,17 @@ const defaultSquaresState = range(BOARD_DIMENSIONS[0]).reduce(
 
 const timeSource = timer(1000, 1000)
 
+interface Props {
+  storedData: State | undefined
+  localStorageName: string
+}
+
 export interface State {
   player: Player
   squares: Square[]
 }
 
-export class Container extends React.Component<
-  {
-    storedData: State | undefined
-    localStorageName: string
-  },
-  State
-> {
+export class Container extends React.Component<Props, State> {
   constructor(props: {
     storedData: State | undefined
     localStorageName: string

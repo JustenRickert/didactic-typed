@@ -13,6 +13,12 @@ const evaluationPlus = (e1: Evaluation, e2: Evaluation): Evaluation => ({
   quantity: e2.quantity * e2.valuePerQuantity + e1.quantity
 })
 
+const isEvaluation = (a: AnyPlusableType): a is Evaluation =>
+  ['quantity', 'valuePerQuantity'].every(key => key in a)
+
+const isPosition = (a: AnyPlusableType): a is Position =>
+  ['x', 'y'].every(key => key in a)
+
 export const plus = <T extends AnyPlusableType>(a: T, b: T): T => {
   if (isPosition(a)) {
     return positionPlus(a, b as Position) as T
@@ -40,12 +46,6 @@ export const withPosition = <T extends { position: Position }>(
 
 export const withRate = <T extends Evaluation2>(t: T, rate: Evaluation) =>
   assign(t, { rate })
-
-const isEvaluation = (a: AnyPlusableType): a is Evaluation =>
-  ['quantity', 'valuePerQuantity'].every(key => key in a)
-
-const isPosition = (a: AnyPlusableType): a is Position =>
-  ['x', 'y'].every(key => key in a)
 
 export const equals = (
   { x: x1, y: y1 }: Position,
