@@ -1,33 +1,7 @@
+import assign from 'object-assign'
 import { isUndefined, range, last } from 'lodash'
 
-export type Evaluation = {
-  quantity: number
-  valuePerQuantity: number
-}
-
-export interface Position {
-  x: number
-  y: number
-  t?: number
-}
-
-type AnyPlusableType = Evaluation | Position
-
-const isEvaluation = (a: AnyPlusableType): a is Evaluation =>
-  ['quantity', 'valuePerQuantity'].every(key => key in a)
-
-const isPosition = (a: AnyPlusableType): a is Position =>
-  ['x', 'y'].every(key => key in a)
-
-export const equals = (
-  { x: x1, y: y1 }: Position,
-  { x: x2, y: y2 }: Position
-) => x1 === x2 && y1 === y2
-
-const diff = ({ x: x1, y: y1 }: Position, { x: x2, y: y2 }: Position) => ({
-  x: x2 - x1,
-  y: y2 - y1
-})
+import { AnyPlusableType, Evaluation, Evaluation2, Position } from './types'
 
 const positionPlus = (p1: Position, p2: Position): Position => ({
   x: p1.x + p2.x,
@@ -47,6 +21,41 @@ export const plus = <T extends AnyPlusableType>(a: T, b: T): T => {
   }
   throw new Error('CANNOT PLUS')
 }
+
+export const update2 = <T extends Evaluation2>(o: T): T => {
+  const { value, rate } = o
+  const delta: { value: Evaluation } = {
+    value: {
+      quantity: rate.valuePerQuantity * rate.quantity,
+      valuePerQuantity: value.valuePerQuantity
+    }
+  }
+  return assign(o, { value: plus(value, delta.value) })
+}
+
+export const withPosition = <T extends { position: Position }>(
+  t: T,
+  position: Position
+) => assign(t, { position })
+
+export const withRate = <T extends Evaluation2>(t: T, rate: Evaluation) =>
+  assign(t, { rate })
+
+const isEvaluation = (a: AnyPlusableType): a is Evaluation =>
+  ['quantity', 'valuePerQuantity'].every(key => key in a)
+
+const isPosition = (a: AnyPlusableType): a is Position =>
+  ['x', 'y'].every(key => key in a)
+
+export const equals = (
+  { x: x1, y: y1 }: Position,
+  { x: x2, y: y2 }: Position
+) => x1 === x2 && y1 === y2
+
+const diff = ({ x: x1, y: y1 }: Position, { x: x2, y: y2 }: Position) => ({
+  x: x2 - x1,
+  y: y2 - y1
+})
 
 export const clamp = (
   [bottomX, topX]: [number, number],

@@ -2,8 +2,7 @@ import * as React from 'react'
 import { range } from 'lodash'
 import styled from 'styled-components'
 
-import Player from '../data/player'
-import Square from '../data/square'
+import { Player, Square } from '../types'
 
 interface StyledGridProps {
   columns: number

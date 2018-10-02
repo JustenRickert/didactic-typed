@@ -2,19 +2,19 @@ import * as React from 'react'
 import { range } from 'lodash'
 import { timer } from 'rxjs'
 
-import Player, { withPosition } from './data/player'
-import Square, { updateValue, withRate } from './data/square'
+import InfoScreen from './components/InfoScreen'
+import Grid from './components/Grid'
+
 import {
   createReducer,
   plus,
   clamp,
   equals,
-  Evaluation,
-  Position
+  update2,
+  withPosition,
+  withRate
 } from './util'
-import InfoScreen from './components/InfoScreen'
-import Grid from './components/Grid'
-
+import { Evaluation, Position, Player, Square } from './types'
 import { ARROW_KEY_TO_POSITION_MAP, BOARD_DIMENSIONS } from './constant'
 
 const clampBoard = clamp([0, BOARD_DIMENSIONS[0]], [0, BOARD_DIMENSIONS[1]])
@@ -27,8 +27,23 @@ const stubEvaluation: (or: 'rate' | 'value') => Evaluation = rateOrValue => ({
 const defaultPlayerValue: Player = {
   position: { x: 0, y: 0 },
   rotation: 0,
-  squareRate: { quantity: 1, valuePerQuantity: 0.1 }
+  squareEvaluation: { quantity: 1, valuePerQuantity: 0.1 }
 }
+
+const defaultSquaresState = range(BOARD_DIMENSIONS[0]).reduce(
+  (squareSquares, i) => {
+    const squares: Square[] = []
+    range(BOARD_DIMENSIONS[1]).forEach(j =>
+      squares.push({
+        position: { x: i, y: j },
+        value: stubEvaluation('value'),
+        rate: stubEvaluation('rate')
+      })
+    )
+    return [...squareSquares, ...squares]
+  },
+  [] as Square[]
+)
 
 const timeSource = timer(1000, 1000)
 
@@ -57,20 +72,7 @@ export class Container extends React.Component<
         ? JSON.parse(stored)
         : undefined || {
             player: defaultPlayerValue,
-            squares: range(BOARD_DIMENSIONS[0]).reduce(
-              (squareSquares, i) => {
-                const squares: Square[] = []
-                range(BOARD_DIMENSIONS[1]).forEach(j =>
-                  squares.push({
-                    position: { x: i, y: j },
-                    value: stubEvaluation('value'),
-                    rate: stubEvaluation('rate')
-                  })
-                )
-                return [...squareSquares, ...squares]
-              },
-              [] as Square[]
-            )
+            squares: defaultSquaresState
           }
   }
 
@@ -80,11 +82,12 @@ export class Container extends React.Component<
     timeSource.subscribe(i => {
       this.updatePlayerSquareRate()
       this.updateSquaresValue()
-      i % 60 === 0
-      localStorage.setItem(
-        this.props.localStorageName,
-        JSON.stringify(this.state)
-      )
+      i % 60 === 0 &&
+        (console.log('saved', new Date()) ||
+          localStorage.setItem(
+            this.props.localStorageName,
+            JSON.stringify(this.state)
+          ))
     })
   }
 
@@ -121,14 +124,14 @@ export class Container extends React.Component<
       squares: squares.map(
         s =>
           equals(s.position, player.position)
-            ? withRate(s, plus(s.rate, player.squareRate))
+            ? withRate(s, plus(s.rate, player.squareEvaluation))
             : s
       )
     }))
   }
 
   updateSquaresValue() {
-    this.setState(({ squares }) => ({ squares: squares.map(updateValue) }))
+    this.setState(({ squares }) => ({ squares: squares.map(update2) }))
   }
 
   updatePlayerPosition(position: Position) {
