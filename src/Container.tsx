@@ -1,5 +1,5 @@
 import * as React from 'react'
-import { cloneDeep, range } from 'lodash'
+import { range } from 'lodash'
 import { timer } from 'rxjs'
 
 import Player, { withPosition } from './data/player'
@@ -19,11 +19,10 @@ import { ARROW_KEY_TO_POSITION_MAP, BOARD_DIMENSIONS } from './constant'
 
 const clampBoard = clamp([0, BOARD_DIMENSIONS[0]], [0, BOARD_DIMENSIONS[1]])
 
-const stubEvaluation: (or: 'rate' | 'value') => Evaluation = rateOrValue =>
-  cloneDeep({
-    quantity: rateOrValue === 'rate' ? 1 : 0,
-    valuePerQuantity: rateOrValue === 'value' ? 1 : 0.01
-  })
+const stubEvaluation: (or: 'rate' | 'value') => Evaluation = rateOrValue => ({
+  quantity: rateOrValue === 'rate' ? 1 : 0,
+  valuePerQuantity: rateOrValue === 'value' ? 1 : 0.01
+})
 
 const defaultPlayerValue: Player = {
   position: { x: 0, y: 0 },
@@ -33,36 +32,59 @@ const defaultPlayerValue: Player = {
 
 const timeSource = timer(1000, 1000)
 
-interface State {
+export interface State {
   player: Player
   squares: Square[]
 }
 
-export class Container extends React.Component<{}, State> {
-  readonly state: State = {
-    player: defaultPlayerValue,
-    squares: range(BOARD_DIMENSIONS[0]).reduce(
-      (squareSquares, i) => {
-        const squares: Square[] = []
-        range(BOARD_DIMENSIONS[1]).forEach(j =>
-          squares.push({
-            position: { x: i, y: j },
-            value: stubEvaluation('value'),
-            rate: stubEvaluation('rate')
-          })
-        )
-        return [...squareSquares, ...squares]
-      },
-      [] as Square[]
-    )
+export class Container extends React.Component<
+  {
+    storedData: State | undefined
+    localStorageName: string
+  },
+  State
+> {
+  constructor(props: {
+    storedData: State | undefined
+    localStorageName: string
+  }) {
+    super(props)
+
+    const stored = localStorage.getItem(this.props.localStorageName)
+
+    this.state =
+      stored !== null
+        ? JSON.parse(stored)
+        : undefined || {
+            player: defaultPlayerValue,
+            squares: range(BOARD_DIMENSIONS[0]).reduce(
+              (squareSquares, i) => {
+                const squares: Square[] = []
+                range(BOARD_DIMENSIONS[1]).forEach(j =>
+                  squares.push({
+                    position: { x: i, y: j },
+                    value: stubEvaluation('value'),
+                    rate: stubEvaluation('rate')
+                  })
+                )
+                return [...squareSquares, ...squares]
+              },
+              [] as Square[]
+            )
+          }
   }
 
   componentDidMount() {
     addEventListener('keydown', this.handleKeyEvent)
 
-    const timeSubscriber = timeSource.subscribe(_ => {
+    timeSource.subscribe(i => {
       this.updatePlayerSquareRate()
       this.updateSquaresValue()
+      i % 60 === 0
+      localStorage.setItem(
+        this.props.localStorageName,
+        JSON.stringify(this.state)
+      )
     })
   }
 
@@ -74,7 +96,11 @@ export class Container extends React.Component<{}, State> {
     const { squares, player } = this.state
     return (
       <>
-        <InfoScreen player={player} squares={squares} />
+        <InfoScreen
+          updateLocally={this.storeStateLocally}
+          player={player}
+          squares={squares}
+        />
         <Grid
           player={player}
           squares={squares}
@@ -83,6 +109,12 @@ export class Container extends React.Component<{}, State> {
       </>
     )
   }
+
+  storeStateLocally = () =>
+    localStorage.setItem(
+      this.props.localStorageName,
+      JSON.stringify(this.state)
+    )
 
   updatePlayerSquareRate() {
     this.setState(({ squares, player }) => ({

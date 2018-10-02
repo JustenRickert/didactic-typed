@@ -9,12 +9,15 @@ const topFive = (squares: Square[]) =>
 
 const InfoScreen = ({
   squares,
-  player
+  player,
+  updateLocally
 }: {
   player: Player
   squares: Square[]
+  updateLocally: () => void
 }) => (
   <div>
+    <button onClick={updateLocally} children="save" />
     {topFive(squares).map(s => (
       <div>
         {`${s.position.x},${s.position.y} is `}

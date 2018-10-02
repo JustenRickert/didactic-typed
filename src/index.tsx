@@ -1,6 +1,14 @@
 import * as React from 'react'
 import * as ReactDOM from 'react-dom'
 
-import { Container } from './Container'
+import { Container, State as ContainerState } from './Container'
 
-ReactDOM.render(<Container />, document.getElementById('app'))
+const storageName = 'app'
+const storage = localStorage.getItem(storageName)
+const stored =
+  storage !== null ? (JSON.parse(storage) as ContainerState) : undefined
+
+ReactDOM.render(
+  <Container storedData={stored} localStorageName={storageName} />,
+  document.getElementById('app')
+)
