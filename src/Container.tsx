@@ -12,23 +12,78 @@ import {
   equals,
   update2,
   withPosition,
-  withRate
+  withRate,
+  withQuantity
 } from './util'
-import { Evaluation, Position, Player, Square } from './types'
+import {
+  Evaluation,
+  Position,
+  Player,
+  Square,
+  CommodityKind,
+  Commodity,
+  Commodities,
+  Evaluation2,
+  Evaluation3
+} from './types'
 import { ARROW_KEY_TO_POSITION_MAP, BOARD_DIMENSIONS } from './constant'
 
 const clampBoard = clamp([0, BOARD_DIMENSIONS[0]], [0, BOARD_DIMENSIONS[1]])
 
-const stubEvaluation: (or: 'rate' | 'value') => Evaluation = rateOrValue => ({
-  quantity: rateOrValue === 'rate' ? 1 : 0,
-  valuePerQuantity: rateOrValue === 'value' ? 1 : 0.01
-})
+const stubEvaluation: (
+  or: 'rate' | 'value' | 'acceleration'
+) => Evaluation = rateOrValue => {
+  if (rateOrValue === 'rate') {
+    return { quantity: 1, valuePerQuantity: 0.01 }
+  }
+  if (rateOrValue === 'value') {
+    return { quantity: 0, valuePerQuantity: 1 }
+  }
+  if (rateOrValue === 'acceleration') {
+    return { quantity: 0.1, valuePerQuantity: 0.001 }
+  }
+  throw new Error('NO KIND')
+}
 
-const defaultPlayerValue: Player = {
+const stubEvaluation2 = () =>
+  ({
+    value: stubEvaluation('value'),
+    rate: stubEvaluation('rate')
+  } as Evaluation2)
+
+const stubEvaluation3 = () =>
+  ({
+    ...stubEvaluation2(),
+    acceleration: stubEvaluation('acceleration')
+  } as Evaluation3)
+
+const defaultPlayerState: Player = {
   position: { x: 0, y: 0 },
   rotation: 0,
   squareEvaluation: { quantity: 1, valuePerQuantity: 0.1 }
 }
+
+const stubCommodity = <K extends CommodityKind>(kind: K, position: Position) =>
+  ({
+    kind,
+    position,
+    quantity: 0,
+    evaluation: stubEvaluation3()
+  } as Commodity<K>)
+
+const defaultCommoditiesState = range(BOARD_DIMENSIONS[0]).reduce<
+  Commodities[]
+>(
+  (commodities, i) => [
+    ...commodities,
+    ...range(BOARD_DIMENSIONS[1]).map(j => ({
+      [CommodityKind.Red]: stubCommodity(CommodityKind.Red, { x: i, y: j }),
+      [CommodityKind.Blue]: stubCommodity(CommodityKind.Blue, { x: i, y: j }),
+      [CommodityKind.Green]: stubCommodity(CommodityKind.Green, { x: i, y: j })
+    }))
+  ],
+  []
+)
 
 const defaultSquaresState = range(BOARD_DIMENSIONS[0]).reduce(
   (squareSquares, i) => {
@@ -47,7 +102,7 @@ const defaultSquaresState = range(BOARD_DIMENSIONS[0]).reduce(
 
 const timeSource = timer(1000, 1000)
 
-interface Props {
+export interface Props {
   storedData: State | undefined
   localStorageName: string
 }
@@ -55,6 +110,7 @@ interface Props {
 export interface State {
   player: Player
   squares: Square[]
+  commodities: Commodities[]
 }
 
 export class Container extends React.Component<Props, State> {
@@ -70,8 +126,9 @@ export class Container extends React.Component<Props, State> {
       stored !== null
         ? JSON.parse(stored)
         : undefined || {
-            player: defaultPlayerValue,
-            squares: defaultSquaresState
+            player: defaultPlayerState,
+            squares: defaultSquaresState,
+            commodities: defaultCommoditiesState
           }
   }
 
@@ -108,6 +165,7 @@ export class Container extends React.Component<Props, State> {
           squares={squares}
           dimensions={{ xMax: BOARD_DIMENSIONS[0], yMax: BOARD_DIMENSIONS[1] }}
         />
+        <Purchaser />
       </>
     )
   }
@@ -117,6 +175,22 @@ export class Container extends React.Component<Props, State> {
       this.props.localStorageName,
       JSON.stringify(this.state)
     )
+
+  purchaseCommodity = (
+    kind: CommodityKind,
+    payload: { quantity: number; position: Position }
+  ) =>
+    this.setState(({ commodities }) => ({
+      commodities: commodities.map(commoditiesElement => ({
+        ...commoditiesElement,
+        [kind]: equals(commoditiesElement[kind].position, payload.position)
+          ? withQuantity(
+              commoditiesElement[kind],
+              commoditiesElement[kind].quantity + payload.quantity
+            )
+          : commoditiesElement[kind]
+      }))
+    }))
 
   updatePlayerSquareRate() {
     this.setState(({ squares, player }) => ({

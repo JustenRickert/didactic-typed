@@ -1,7 +1,14 @@
 import assign from 'object-assign'
 import { isUndefined, range, last } from 'lodash'
 
-import { AnyPlusableType, Evaluation, Evaluation2, Position } from './types'
+import {
+  AnyPlusableType,
+  Evaluation,
+  Evaluation2,
+  Evaluation3,
+  Position,
+  Commodity
+} from './types'
 
 const positionPlus = (p1: Position, p2: Position): Position => ({
   x: p1.x + p2.x,
@@ -39,6 +46,10 @@ export const update2 = <T extends Evaluation2>(o: T): T => {
   return assign(o, { value: plus(value, delta.value) })
 }
 
+export const totalValue = <E extends { evaluation: Evaluation3 }>(
+  evaluation: E
+) => {}
+
 export const withPosition = <T extends { position: Position }>(
   t: T,
   position: Position
@@ -46,6 +57,11 @@ export const withPosition = <T extends { position: Position }>(
 
 export const withRate = <T extends Evaluation2>(t: T, rate: Evaluation) =>
   assign(t, { rate })
+
+export const withQuantity = <T extends Commodity<any>>(
+  t: T,
+  quantity: number
+) => assign(t, { quantity })
 
 export const equals = (
   { x: x1, y: y1 }: Position,

@@ -16,6 +16,12 @@ export type Evaluation2 = {
   rate: Evaluation
 }
 
+export type Evaluation3 = {
+  value: Evaluation
+  rate: Evaluation
+  acceleration: Evaluation
+}
+
 export type Player = {
   position: Position
   rotation: number
@@ -23,3 +29,21 @@ export type Player = {
 }
 
 export type Square = Evaluation2 & { position: Position }
+
+export enum CommodityKind {
+  Red = 'RED',
+  Blue = 'BLUE',
+  Green = 'GREEN'
+}
+
+export type Commodity<K extends CommodityKind> = {
+  kind: K
+  evaluation: Evaluation3
+  position: Position
+}
+
+export type Commodities = {
+  [CommodityKind.Red]: Commodity<CommodityKind.Red>
+  [CommodityKind.Blue]: Commodity<CommodityKind.Blue>
+  [CommodityKind.Green]: Commodity<CommodityKind.Green>
+}
