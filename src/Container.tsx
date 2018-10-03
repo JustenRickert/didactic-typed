@@ -33,16 +33,14 @@ const clampBoard = clamp([0, BOARD_DIMENSIONS[0]], [0, BOARD_DIMENSIONS[1]])
 const stubEvaluation: (
   or: 'rate' | 'value' | 'acceleration'
 ) => Evaluation = rateOrValue => {
-  if (rateOrValue === 'rate') {
-    return { quantity: 1, valuePerQuantity: 0.01 }
+  switch (rateOrValue) {
+    case 'rate':
+      return { quantity: 1, valuePerQuantity: 0.01 }
+    case 'value':
+      return { quantity: 0, valuePerQuantity: 1 }
+    case 'acceleration':
+      return { quantity: 0.1, valuePerQuantity: 0.001 }
   }
-  if (rateOrValue === 'value') {
-    return { quantity: 0, valuePerQuantity: 1 }
-  }
-  if (rateOrValue === 'acceleration') {
-    return { quantity: 0.1, valuePerQuantity: 0.001 }
-  }
-  throw new Error('NO KIND')
 }
 
 const stubEvaluation2 = () =>
