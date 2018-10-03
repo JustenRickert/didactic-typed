@@ -124,7 +124,7 @@ export class Container extends React.Component<Props, State> {
     this.state =
       stored !== null
         ? JSON.parse(stored)
-        : undefined || {
+        : {
             player: defaultPlayerState,
             squares: defaultSquaresState,
             commodities: defaultCommoditiesState
