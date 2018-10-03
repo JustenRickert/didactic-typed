@@ -10,10 +10,9 @@ import {
   plus,
   clamp,
   equals,
+  defaultingMapCommodities,
   update2,
-  withPosition,
-  withRate,
-  withQuantity
+  update3
 } from './util'
 import {
   Evaluation,
@@ -136,12 +135,11 @@ export class Container extends React.Component<Props, State> {
     timeSource.subscribe(i => {
       this.updatePlayerSquareRate()
       this.updateSquaresValue()
-      i % 60 === 0 &&
-        (console.log('saved', new Date()) ||
-          localStorage.setItem(
-            this.props.localStorageName,
-            JSON.stringify(this.state)
-          ))
+      i % 60 === 59 &&
+        localStorage.setItem(
+          this.props.localStorageName,
+          JSON.stringify(this.state)
+        )
     })
   }
 
@@ -163,7 +161,6 @@ export class Container extends React.Component<Props, State> {
           squares={squares}
           dimensions={{ xMax: BOARD_DIMENSIONS[0], yMax: BOARD_DIMENSIONS[1] }}
         />
-        <Purchaser />
       </>
     )
   }
@@ -179,14 +176,21 @@ export class Container extends React.Component<Props, State> {
     payload: { quantity: number; position: Position }
   ) =>
     this.setState(({ commodities }) => ({
-      commodities: commodities.map(commoditiesElement => ({
-        ...commoditiesElement,
-        [kind]: equals(commoditiesElement[kind].position, payload.position)
-          ? withQuantity(
-              commoditiesElement[kind],
-              commoditiesElement[kind].quantity + payload.quantity
-            )
-          : commoditiesElement[kind]
+      commodities: commodities.map(commies => ({
+        ...commies,
+        [kind]: equals(commies[kind].position, payload.position)
+          ? defaultingMapCommodities(commies, {
+              kind,
+              payload: {
+                evaluation: {
+                  value: {
+                    quantity:
+                      commies[kind].evaluation.value.quantity + payload.quantity
+                  }
+                }
+              }
+            })
+          : commies[kind]
       }))
     }))
 
@@ -195,7 +199,7 @@ export class Container extends React.Component<Props, State> {
       squares: squares.map(
         s =>
           equals(s.position, player.position)
-            ? withRate(s, plus(s.rate, player.squareEvaluation))
+            ? { ...s, rate: plus(s.rate, player.squareEvaluation) }
             : s
       )
     }))
@@ -206,7 +210,9 @@ export class Container extends React.Component<Props, State> {
   }
 
   updatePlayerPosition(position: Position) {
-    this.setState(state => ({ player: withPosition(state.player, position) }))
+    this.setState(({ player }) => ({
+      player: { ...player, position }
+    }))
   }
 
   handleKeyEvent = (e: KeyboardEvent) => {

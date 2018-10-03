@@ -7,8 +7,41 @@ import {
   Evaluation2,
   Evaluation3,
   Position,
-  Commodity
+  Commodity,
+  CommodityKind,
+  Commodities
 } from './types'
+
+export type RecursivePartial<T> = {
+  [P in keyof T]?: T[P] extends (infer U)[]
+    ? RecursivePartial<U>[]
+    : T[P] extends object ? RecursivePartial<T[P]> : T[P]
+}
+
+const recursiveUpdate = <T extends { [k: string]: any }>(o: T, p: T): T =>
+  Object.keys(o).reduce(
+    (acc, key) => {
+      if (p[key] && typeof o[key] === 'object')
+        return assign(o, { [key]: recursiveUpdate(o[key], p[key]) })
+      return assign(o, { [key]: p[key] || o[key] })
+    },
+    {} as T
+  )
+
+export const defaultingMapCommodities = (
+  commies: Commodities,
+  {
+    kind,
+    payload
+  }: {
+    kind: CommodityKind
+    payload: RecursivePartial<Commodity<any>>
+  }
+) =>
+  ({
+    ...commies,
+    [kind]: recursiveUpdate(commies[kind], payload)
+  } as Commodities)
 
 const positionPlus = (p1: Position, p2: Position): Position => ({
   x: p1.x + p2.x,
@@ -46,22 +79,25 @@ export const update2 = <T extends Evaluation2>(o: T): T => {
   return assign(o, { value: plus(value, delta.value) })
 }
 
-export const totalValue = <E extends { evaluation: Evaluation3 }>(
-  evaluation: E
-) => {}
+export const update3 = <T extends Evaluation3>(o: T): T => {
+  const { value, rate, acceleration } = o
+  const updated2 = update2({ value, rate })
+  const delta: Evaluation2 = {
+    value: updated2.value,
+    rate: {
+      quantity: acceleration.valuePerQuantity * acceleration.quantity,
+      valuePerQuantity: rate.valuePerQuantity
+    }
+  }
+  return assign(o, {
+    value: plus(value, delta.value),
+    rate: plus(rate, delta.rate)
+  })
+}
 
-export const withPosition = <T extends { position: Position }>(
-  t: T,
-  position: Position
-) => assign(t, { position })
-
-export const withRate = <T extends Evaluation2>(t: T, rate: Evaluation) =>
-  assign(t, { rate })
-
-export const withQuantity = <T extends Commodity<any>>(
-  t: T,
-  quantity: number
-) => assign(t, { quantity })
+export const totalValue = <E extends Evaluation3>({
+  value: { quantity, valuePerQuantity }
+}: E) => quantity * valuePerQuantity
 
 export const equals = (
   { x: x1, y: y1 }: Position,
