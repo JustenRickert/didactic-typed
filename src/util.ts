@@ -95,8 +95,12 @@ export const update3 = <T extends Evaluation3>(o: T): T => {
   })
 }
 
-export const totalValue = <E extends Evaluation3>({
+export const totalValue = <E extends Evaluation3 | Evaluation2>({
   value: { quantity, valuePerQuantity }
+}: E) => quantity * valuePerQuantity
+
+export const totalRate = <E extends Evaluation3 | Evaluation2>({
+  rate: { quantity, valuePerQuantity }
 }: E) => quantity * valuePerQuantity
 
 export const equals = (

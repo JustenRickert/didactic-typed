@@ -2,8 +2,7 @@ import * as React from 'react'
 import { orderBy, take } from 'lodash'
 
 import { Player, Square } from '../types'
-// import { totalRate, totalValue } from '../util' // TODO
-import { totalRate, totalValue } from '../data/square'
+import { totalRate, totalValue } from '../util'
 
 const topFive = (squares: Square[]) =>
   take(orderBy(squares, totalValue, 'desc'), 5)

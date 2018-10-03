@@ -4,6 +4,7 @@ import { timer } from 'rxjs'
 
 import InfoScreen from './components/InfoScreen'
 import Grid from './components/Grid'
+import Purchaser from './components/Purchaser'
 
 import {
   createReducer,
@@ -50,7 +51,8 @@ const stubEvaluation2 = () =>
 
 const stubEvaluation3 = () =>
   ({
-    ...stubEvaluation2(),
+    value: stubEvaluation('value'),
+    rate: stubEvaluation('rate'),
     acceleration: stubEvaluation('acceleration')
   } as Evaluation3)
 
@@ -148,7 +150,7 @@ export class Container extends React.Component<Props, State> {
   }
 
   render() {
-    const { squares, player } = this.state
+    const { commodities, squares, player } = this.state
     return (
       <>
         <InfoScreen
@@ -160,6 +162,10 @@ export class Container extends React.Component<Props, State> {
           player={player}
           squares={squares}
           dimensions={{ xMax: BOARD_DIMENSIONS[0], yMax: BOARD_DIMENSIONS[1] }}
+        />
+        <Purchaser
+          commodities={commodities}
+          purchaseCommodity={this.purchaseCommodity}
         />
       </>
     )
@@ -176,22 +182,23 @@ export class Container extends React.Component<Props, State> {
     payload: { quantity: number; position: Position }
   ) =>
     this.setState(({ commodities }) => ({
-      commodities: commodities.map(commies => ({
-        ...commies,
-        [kind]: equals(commies[kind].position, payload.position)
-          ? defaultingMapCommodities(commies, {
-              kind,
-              payload: {
-                evaluation: {
-                  value: {
-                    quantity:
-                      commies[kind].evaluation.value.quantity + payload.quantity
+      commodities: commodities.map(
+        commies =>
+          equals(commies[kind].position, payload.position)
+            ? defaultingMapCommodities(commies, {
+                kind,
+                payload: {
+                  evaluation: {
+                    value: {
+                      quantity:
+                        commies[kind].evaluation.value.quantity +
+                        payload.quantity
+                    }
                   }
                 }
-              }
-            })
-          : commies[kind]
-      }))
+              })
+            : commies
+      )
     }))
 
   updatePlayerSquareRate() {
