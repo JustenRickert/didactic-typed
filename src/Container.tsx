@@ -161,6 +161,7 @@ export class Container extends React.Component<Props, State> {
         <Grid
           player={player}
           squares={squares}
+          commodities={commodities}
           dimensions={{ xMax: BOARD_DIMENSIONS[0], yMax: BOARD_DIMENSIONS[1] }}
         />
         <Purchaser

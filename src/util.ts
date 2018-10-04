@@ -1,4 +1,3 @@
-import assign from 'object-assign'
 import { isUndefined, range, last } from 'lodash'
 
 import {
@@ -22,8 +21,8 @@ const recursiveUpdate = <T extends { [k: string]: any }>(o: T, p: T): T =>
   Object.keys(o).reduce(
     (acc, key) => {
       if (p[key] && typeof o[key] === 'object')
-        return assign(o, { [key]: recursiveUpdate(o[key], p[key]) })
-      return assign(o, { [key]: p[key] || o[key] })
+        return Object.assign(o, { [key]: recursiveUpdate(o[key], p[key]) })
+      return Object.assign(o, { [key]: p[key] || o[key] })
     },
     {} as T
   )
@@ -76,7 +75,7 @@ export const update2 = <T extends Evaluation2>(o: T): T => {
       valuePerQuantity: value.valuePerQuantity
     }
   }
-  return assign(o, { value: plus(value, delta.value) })
+  return Object.assign(o, { value: plus(value, delta.value) })
 }
 
 export const update3 = <T extends Evaluation3>(o: T): T => {
@@ -89,7 +88,7 @@ export const update3 = <T extends Evaluation3>(o: T): T => {
       valuePerQuantity: rate.valuePerQuantity
     }
   }
-  return assign(o, {
+  return Object.assign(o, {
     value: plus(value, delta.value),
     rate: plus(rate, delta.rate)
   })
