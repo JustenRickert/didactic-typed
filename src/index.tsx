@@ -1,7 +1,7 @@
 import * as React from 'react'
 import * as ReactDOM from 'react-dom'
 
-import { Container, State as ContainerState } from './Container'
+import {Container, State as ContainerState} from './Container'
 
 const storageName = 'app'
 const storage = localStorage.getItem(storageName)

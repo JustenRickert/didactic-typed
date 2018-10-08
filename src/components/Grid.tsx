@@ -1,6 +1,5 @@
 import * as React from 'react'
-import { range, clone } from 'lodash'
-import styled from 'styled-components'
+import {range, clone} from 'lodash'
 
 import {
   Player,
@@ -10,53 +9,18 @@ import {
   Position,
   CommodityKind
 } from '../types'
-import { ReactElement } from 'react'
+import {ReactElement} from 'react'
 
-interface StyledGridProps {
-  columns: number
-}
-
-const Wrapper = styled.div``
-
-const StyledGrid = styled.div`
-  display: grid;
-  grid-gap: 1em;
-  max-width: 12em;
-  grid-template-columns: repeat(
-    ${(props: StyledGridProps) => props.columns},
-    1fr
-  );
-`
-
-const squareLength = '6em'
-
-const GridSquare = styled.div`
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  width: ${squareLength};
-  height: ${squareLength};
-  box-sizing: border-box;
-  border: 1px black solid;
-  transition: all 2s;
-`
-
-interface PlayerSquareProps {
-  leftOffset: number
-  topOffset: number
-}
-
-const PlayerIconWrapper = styled.div`
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  position: absolute;
-  width: ${squareLength};
-  height: ${squareLength};
-`
+import {
+  StyledSpotOverlay,
+  StyledGrid,
+  GridSquare,
+  PlayerIconWrapper,
+  GridWrapper
+} from './primitives'
 
 const Player = ({
-  player: { position: { x, y } },
+  player: {position: {x, y}},
   rowSize,
   gridNode
 }: {
@@ -64,8 +28,8 @@ const Player = ({
   rowSize: number
   gridNode: HTMLDivElement
 }) => {
-  const { top: topOffset, left: leftOffset } = gridNode.getBoundingClientRect()
-  const { top, left } = gridNode.children[
+  const {top: topOffset, left: leftOffset} = gridNode.getBoundingClientRect()
+  const {top, left} = gridNode.children[
     x + rowSize * y
   ].getBoundingClientRect() as ClientRect
   return (
@@ -90,7 +54,7 @@ const randomPositionWithinSquare = (
 ): Position => {
   const node = squareRef.current
   if (!node) {
-    return { x: -Infinity, y: -Infinity }
+    return {x: -Infinity, y: -Infinity}
   }
   const {
     top: squareTop,
@@ -98,17 +62,16 @@ const randomPositionWithinSquare = (
     width,
     height
   } = node.getBoundingClientRect() as DOMRect
-  window.scrollX
   const top = scrollY + squareTop
   const left = scrollX + squareLeft
-  const center = { x: left + width / 2 - 10, y: top - height / 2 - 35 }
+  const center = {x: left + width / 2 - 10, y: top - height / 2 - 35}
   const direction = () => (Math.random() < 1 / 2 ? 1 : -1)
   const length = width / 3
   const offset = {
     x: direction() * Math.random() * length,
     y: direction() * Math.random() * length
   }
-  return { x: center.x + offset.x, y: center.y + offset.y }
+  return {x: center.x + offset.x, y: center.y + offset.y}
 }
 
 const makeCommodityPositionMap = (
@@ -132,7 +95,7 @@ interface SpotProps {
   kind: CommodityKind
 }
 
-const Spot: React.StatelessComponent<SpotProps> = ({ position, kind }) => (
+const Spot: React.StatelessComponent<SpotProps> = ({position, kind}) => (
   <circle
     cx={position.x}
     cy={position.y}
@@ -149,38 +112,22 @@ interface SpotOverlayProps {
   squareRefs: React.RefObject<HTMLDivElement>[]
 }
 
-const StyledSpotOverlay = styled.div`
-  position: absolute;
-`
+interface SpotOverlayState {
+  commodityPositions: Map<Commodity<any>, Position>
+}
 
-class SpotOverlay extends React.Component<
-  SpotOverlayProps,
-  {
-    commodityPositions: Map<Commodity<any>, Position>
-  }
-> {
-  constructor(props: SpotOverlayProps) {
-    super(props)
-    this.state = {
-      commodityPositions: makeCommodityPositionMap(
-        props.commodities,
-        props.squareRefs
-      )
-    }
-  }
+class SpotOverlay extends React.Component<SpotOverlayProps, SpotOverlayState> {
+  public readonly state = {commodityPositions: new Map()}
 
-  static getDerivedStateFromProps({
-    commodities,
-    squareRefs
-  }: SpotOverlayProps) {
+  static getDerivedStateFromProps({commodities, squareRefs}: SpotOverlayProps) {
     return {
       commodityPositions: makeCommodityPositionMap(commodities, squareRefs)
     }
   }
 
   render() {
-    const { wrapperRef: { current: wrapperNode } } = this.props
-    const { commodityPositions } = this.state
+    const {wrapperRef: {current: wrapperNode}} = this.props
+    const {commodityPositions} = this.state
     const spots: React.ReactElement<SpotProps>[] = []
     let height = 0
     let width = 0
@@ -212,7 +159,7 @@ interface Props {
   player: Player
   squares: Square[]
   commodities: Commodities[]
-  dimensions: { xMax: number; yMax: number }
+  dimensions: {xMax: number; yMax: number}
 }
 
 interface State {
@@ -220,7 +167,8 @@ interface State {
 }
 
 class Grid extends React.Component<Props, State> {
-  ref = React.createRef<HTMLDivElement>()
+  gridRef = React.createRef<HTMLDivElement>()
+  wrapperRef = React.createRef<HTMLDivElement>()
   squareRefs: React.RefObject<HTMLDivElement>[] = []
 
   constructor(props: Props) {
@@ -232,31 +180,26 @@ class Grid extends React.Component<Props, State> {
   }
 
   render() {
-    const {
-      player,
-      commodities,
-      dimensions: { xMax, yMax },
-      squares
-    } = this.props
-    const { current: gridNode } = this.ref
+    const {player, commodities, dimensions: {xMax, yMax}, squares} = this.props
+    const {current: gridNode} = this.gridRef
     return (
-      <Wrapper innerRef={this.ref}>
+      <GridWrapper innerRef={this.wrapperRef}>
         {gridNode && (
           <Player player={player} gridNode={gridNode} rowSize={xMax} />
         )}
         <SpotOverlay
           commodities={commodities}
-          wrapperRef={this.ref}
+          wrapperRef={this.wrapperRef}
           squareRefs={this.squareRefs}
         />
-        <StyledGrid columns={xMax}>
+        <StyledGrid innerRef={this.gridRef} columns={xMax}>
           {range(xMax * yMax).map(i => (
             <div>
               <GridSquare innerRef={this.squareRefs[i]} key={i} children="" />
             </div>
           ))}
         </StyledGrid>
-      </Wrapper>
+      </GridWrapper>
     )
   }
 }

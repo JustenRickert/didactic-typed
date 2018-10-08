@@ -1,6 +1,6 @@
 import * as React from 'react'
-import { range } from 'lodash'
-import { timer } from 'rxjs'
+import {range} from 'lodash'
+import {timer} from 'rxjs'
 
 import InfoScreen from './components/InfoScreen'
 import Grid from './components/Grid'
@@ -26,7 +26,7 @@ import {
   Evaluation2,
   Evaluation3
 } from './types'
-import { ARROW_KEY_TO_POSITION_MAP, BOARD_DIMENSIONS } from './constant'
+import {ARROW_KEY_TO_POSITION_MAP, BOARD_DIMENSIONS} from './constant'
 
 const clampBoard = clamp([0, BOARD_DIMENSIONS[0]], [0, BOARD_DIMENSIONS[1]])
 
@@ -35,11 +35,11 @@ const stubEvaluation: (
 ) => Evaluation = rateOrValue => {
   switch (rateOrValue) {
     case 'rate':
-      return { quantity: 1, valuePerQuantity: 0.01 }
+      return {quantity: 1, valuePerQuantity: 0.01}
     case 'value':
-      return { quantity: 0, valuePerQuantity: 1 }
+      return {quantity: 0, valuePerQuantity: 1}
     case 'acceleration':
-      return { quantity: 0.1, valuePerQuantity: 0.001 }
+      return {quantity: 0.1, valuePerQuantity: 0.001}
   }
 }
 
@@ -57,9 +57,9 @@ const stubEvaluation3 = () =>
   } as Evaluation3)
 
 const defaultPlayerState: Player = {
-  position: { x: 0, y: 0 },
+  position: {x: 0, y: 0},
   rotation: 0,
-  squareEvaluation: { quantity: 1, valuePerQuantity: 0.1 }
+  squareEvaluation: {quantity: 1, valuePerQuantity: 0.1}
 }
 
 const stubCommodity = <K extends CommodityKind>(kind: K, position: Position) =>
@@ -76,9 +76,9 @@ const defaultCommoditiesState = range(BOARD_DIMENSIONS[0]).reduce<
   (commodities, i) => [
     ...commodities,
     ...range(BOARD_DIMENSIONS[1]).map(j => ({
-      [CommodityKind.Red]: stubCommodity(CommodityKind.Red, { x: i, y: j }),
-      [CommodityKind.Blue]: stubCommodity(CommodityKind.Blue, { x: i, y: j }),
-      [CommodityKind.Green]: stubCommodity(CommodityKind.Green, { x: i, y: j })
+      [CommodityKind.Red]: stubCommodity(CommodityKind.Red, {x: i, y: j}),
+      [CommodityKind.Blue]: stubCommodity(CommodityKind.Blue, {x: i, y: j}),
+      [CommodityKind.Green]: stubCommodity(CommodityKind.Green, {x: i, y: j})
     }))
   ],
   []
@@ -89,7 +89,7 @@ const defaultSquaresState = range(BOARD_DIMENSIONS[0]).reduce(
     const squares: Square[] = []
     range(BOARD_DIMENSIONS[1]).forEach(j =>
       squares.push({
-        position: { x: i, y: j },
+        position: {x: i, y: j},
         value: stubEvaluation('value'),
         rate: stubEvaluation('rate')
       })
@@ -150,7 +150,7 @@ export class Container extends React.Component<Props, State> {
   }
 
   render() {
-    const { commodities, squares, player } = this.state
+    const {commodities, squares, player} = this.state
     return (
       <>
         <InfoScreen
@@ -162,7 +162,7 @@ export class Container extends React.Component<Props, State> {
           player={player}
           squares={squares}
           commodities={commodities}
-          dimensions={{ xMax: BOARD_DIMENSIONS[0], yMax: BOARD_DIMENSIONS[1] }}
+          dimensions={{xMax: BOARD_DIMENSIONS[0], yMax: BOARD_DIMENSIONS[1]}}
         />
         <Purchaser
           commodities={commodities}
@@ -180,9 +180,9 @@ export class Container extends React.Component<Props, State> {
 
   purchaseCommodity = (
     kind: CommodityKind,
-    payload: { quantity: number; position: Position }
+    payload: {quantity: number; position: Position}
   ) =>
-    this.setState(({ commodities }) => ({
+    this.setState(({commodities}) => ({
       commodities: commodities.map(
         commies =>
           equals(commies[kind].position, payload.position)
@@ -203,28 +203,28 @@ export class Container extends React.Component<Props, State> {
     }))
 
   updatePlayerSquareRate() {
-    this.setState(({ squares, player }) => ({
+    this.setState(({squares, player}) => ({
       squares: squares.map(
         s =>
           equals(s.position, player.position)
-            ? { ...s, rate: plus(s.rate, player.squareEvaluation) }
+            ? {...s, rate: plus(s.rate, player.squareEvaluation)}
             : s
       )
     }))
   }
 
   updateSquaresValue() {
-    this.setState(({ squares }) => ({ squares: squares.map(update2) }))
+    this.setState(({squares}) => ({squares: squares.map(update2)}))
   }
 
   updatePlayerPosition(position: Position) {
-    this.setState(({ player }) => ({
-      player: { ...player, position }
+    this.setState(({player}) => ({
+      player: {...player, position}
     }))
   }
 
   handleKeyEvent = (e: KeyboardEvent) => {
-    const { player } = this.state
+    const {player} = this.state
     const position = ARROW_KEY_TO_POSITION_MAP[e.key]
     if (position) {
       this.updatePlayerPosition(clampBoard(plus(player.position, position)))

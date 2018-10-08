@@ -1,4 +1,4 @@
-import { isUndefined, range, last } from 'lodash'
+import {isUndefined, range, last} from 'lodash'
 
 import {
   AnyPlusableType,
@@ -11,18 +11,15 @@ import {
   Commodities
 } from './types'
 
-export type RecursivePartial<T> = {
-  [P in keyof T]?: T[P] extends (infer U)[]
-    ? RecursivePartial<U>[]
-    : T[P] extends object ? RecursivePartial<T[P]> : T[P]
-}
-
-const recursiveUpdate = <T extends { [k: string]: any }>(o: T, p: T): T =>
+const recursiveUpdate = <T extends {[k: string]: any}>(
+  o: T,
+  p: RecursivePartial<T>
+): T =>
   Object.keys(o).reduce(
     (acc, key) => {
       if (p[key] && typeof o[key] === 'object')
-        return Object.assign(o, { [key]: recursiveUpdate(o[key], p[key]) })
-      return Object.assign(o, { [key]: p[key] || o[key] })
+        return Object.assign(o, {[key]: recursiveUpdate(o[key], p[key]!)})
+      return Object.assign(o, {[key]: p[key] || o[key]})
     },
     {} as T
   )
@@ -68,19 +65,19 @@ export const plus = <T extends AnyPlusableType>(a: T, b: T): T => {
 }
 
 export const update2 = <T extends Evaluation2>(o: T): T => {
-  const { value, rate } = o
-  const delta: { value: Evaluation } = {
+  const {value, rate} = o
+  const delta: {value: Evaluation} = {
     value: {
       quantity: rate.valuePerQuantity * rate.quantity,
       valuePerQuantity: value.valuePerQuantity
     }
   }
-  return Object.assign(o, { value: plus(value, delta.value) })
+  return Object.assign(o, {value: plus(value, delta.value)})
 }
 
 export const update3 = <T extends Evaluation3>(o: T): T => {
-  const { value, rate, acceleration } = o
-  const updated2 = update2({ value, rate })
+  const {value, rate, acceleration} = o
+  const updated2 = update2({value, rate})
   const delta: Evaluation2 = {
     value: updated2.value,
     rate: {
@@ -95,19 +92,17 @@ export const update3 = <T extends Evaluation3>(o: T): T => {
 }
 
 export const totalValue = <E extends Evaluation3 | Evaluation2>({
-  value: { quantity, valuePerQuantity }
+  value: {quantity, valuePerQuantity}
 }: E) => quantity * valuePerQuantity
 
 export const totalRate = <E extends Evaluation3 | Evaluation2>({
-  rate: { quantity, valuePerQuantity }
+  rate: {quantity, valuePerQuantity}
 }: E) => quantity * valuePerQuantity
 
-export const equals = (
-  { x: x1, y: y1 }: Position,
-  { x: x2, y: y2 }: Position
-) => x1 === x2 && y1 === y2
+export const equals = ({x: x1, y: y1}: Position, {x: x2, y: y2}: Position) =>
+  x1 === x2 && y1 === y2
 
-const diff = ({ x: x1, y: y1 }: Position, { x: x2, y: y2 }: Position) => ({
+const diff = ({x: x1, y: y1}: Position, {x: x2, y: y2}: Position) => ({
   x: x2 - x1,
   y: y2 - y1
 })
@@ -124,15 +119,15 @@ export const clamp = (
     position.y > topY - 1
       ? topY - 1
       : position.y < bottomY ? bottomY : position.y
-  return { ...position, x, y }
+  return {...position, x, y}
 }
 
-const divide = ({ x, y }: Position, divisor: number) => ({
+const divide = ({x, y}: Position, divisor: number) => ({
   x: x / divisor,
   y: y / divisor
 })
 
-const times = ({ x, y }: Position, scalar: number) => ({
+const times = ({x, y}: Position, scalar: number) => ({
   x: x * scalar,
   y: y * scalar
 })
