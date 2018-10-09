@@ -46,3 +46,22 @@ export const GridWrapper = styled.div``
 export const StyledSpotOverlay = styled.div`
   position: absolute;
 `
+
+export const StyledEvaluation = styled.div`
+  display: flex;
+  margin: 4px;
+`
+
+export const StyledCommodityView = styled.div`
+  display: flex;
+  align-items: center;
+  margin: 4px;
+`
+
+export const StyledKind = styled.div`
+  margin: 2px;
+`
+
+export const BuyWrapper = styled.div`
+  display: flex;
+`

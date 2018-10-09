@@ -11,7 +11,7 @@ import {
   plus,
   clamp,
   equals,
-  defaultingMapCommodities,
+  reduceCommoditiesAddQuantityByKind,
   update2,
   update3
 } from './util'
@@ -172,11 +172,12 @@ export class Container extends React.Component<Props, State> {
     )
   }
 
-  storeStateLocally = () =>
+  storeStateLocally() {
     localStorage.setItem(
       this.props.localStorageName,
       JSON.stringify(this.state)
     )
+  }
 
   purchaseCommodity = (
     kind: CommodityKind,
@@ -184,21 +185,7 @@ export class Container extends React.Component<Props, State> {
   ) =>
     this.setState(({commodities}) => ({
       commodities: commodities.map(
-        commies =>
-          equals(commies[kind].position, payload.position)
-            ? defaultingMapCommodities(commies, {
-                kind,
-                payload: {
-                  evaluation: {
-                    value: {
-                      quantity:
-                        commies[kind].evaluation.value.quantity +
-                        payload.quantity
-                    }
-                  }
-                }
-              })
-            : commies
+        reduceCommoditiesAddQuantityByKind({kind, payload})
       )
     }))
 

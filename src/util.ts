@@ -8,36 +8,60 @@ import {
   Position,
   Commodity,
   CommodityKind,
-  Commodities
+  Commodities,
+  RecursivePartial
 } from './types'
 
 const recursiveUpdate = <T extends {[k: string]: any}>(
   o: T,
-  p: RecursivePartial<T>
+  p: NonNullable<RecursivePartial<T>>
 ): T =>
   Object.keys(o).reduce(
-    (acc, key) => {
-      if (p[key] && typeof o[key] === 'object')
-        return Object.assign(o, {[key]: recursiveUpdate(o[key], p[key]!)})
-      return Object.assign(o, {[key]: p[key] || o[key]})
-    },
+    (acc, key) =>
+      p[key] && typeof o[key] === 'object'
+        ? Object.assign(o, {[key]: recursiveUpdate(o[key], p[key]!)})
+        : Object.assign(o, {[key]: p[key] || o[key]}),
     {} as T
   )
 
-export const defaultingMapCommodities = (
+type CommoditiesUpdateAction = {
+  kind: CommodityKind
+  payload: NonNullable<RecursivePartial<Commodity<any>>>
+}
+
+export const reduceCommoditiesUpdateByKind = (
   commies: Commodities,
-  {
-    kind,
-    payload
-  }: {
-    kind: CommodityKind
-    payload: RecursivePartial<Commodity<any>>
-  }
+  {kind, payload}: CommoditiesUpdateAction
 ) =>
   ({
     ...commies,
     [kind]: recursiveUpdate(commies[kind], payload)
   } as Commodities)
+
+type CommoditiesAddQuantityAction = {
+  kind: CommodityKind
+  payload: {
+    quantity: number
+    position: Position
+  }
+}
+
+export const reduceCommoditiesAddQuantityByKind = ({
+  kind,
+  payload: {position, quantity}
+}: CommoditiesAddQuantityAction) => (commodities: Commodities) =>
+  equals(commodities[kind].position, position)
+    ? reduceCommoditiesUpdateByKind(commodities, {
+        kind: kind,
+        payload: {
+          evaluation: {
+            value: {
+              quantity: commodities[kind].evaluation.value.quantity + quantity
+            }
+          }
+        }
+      })
+    : commodities
 
 const positionPlus = (p1: Position, p2: Position): Position => ({
   x: p1.x + p2.x,

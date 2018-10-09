@@ -1,5 +1,5 @@
 import * as React from 'react'
-import { take, orderBy } from 'lodash'
+import {take, orderBy, values} from 'lodash'
 import styled from 'styled-components'
 
 import {
@@ -9,37 +9,21 @@ import {
   Evaluation3,
   Position
 } from '../types'
-import { totalValue, totalRate } from '../util'
+import {totalValue, totalRate} from '../util'
 
-const StyledEvaluation = styled.div`
-  display: flex;
-  margin: 4px;
-`
-
-const StyledCommodityView = styled.div`
-  display: flex;
-  align-items: center;
-  margin: 4px;
-`
-
-const StyledKind = styled.div`
-  margin: 2px;
-`
-
-const BuyWrapper = styled.div`
-  display: flex;
-`
+import {
+  StyledEvaluation,
+  StyledCommodityView,
+  StyledKind,
+  BuyWrapper
+} from './primitives'
 
 const topFive = (commodities: Commodities[]) =>
   take(
     orderBy(
       commodities,
       commies =>
-        Math.max(
-          ...Object.keys(commies).map(key =>
-            totalValue(commies[key as CommodityKind].evaluation)
-          )
-        ),
+        Math.max(...values(commies).map(c => totalValue(c.evaluation))),
       'desc'
     ),
     5
@@ -47,13 +31,13 @@ const topFive = (commodities: Commodities[]) =>
 
 const CommodityEvaluation: React.StatelessComponent<{
   evaluation: Evaluation3
-}> = ({ evaluation }) => (
+}> = ({evaluation}) => (
   <StyledEvaluation>
     value: {totalValue(evaluation)}, rate: {totalRate(evaluation)}
   </StyledEvaluation>
 )
 
-const PositionView: React.StatelessComponent<{ position: Position }> = ({
+const PositionView: React.StatelessComponent<{position: Position}> = ({
   position
 }) => (
   <div>
@@ -61,7 +45,7 @@ const PositionView: React.StatelessComponent<{ position: Position }> = ({
   </div>
 )
 
-const CommodityView = ({ commodity }: { commodity: Commodity<any> }) => (
+const CommodityView = ({commodity}: {commodity: Commodity<any>}) => (
   <StyledCommodityView>
     <StyledKind children={`(${commodity.kind})`} />
     <PositionView position={commodity.position} />
@@ -73,13 +57,13 @@ interface Props {
   commodities: Commodities[]
   purchaseCommodity: (
     kind: CommodityKind,
-    payload: { quantity: number; position: Position }
+    payload: {quantity: number; position: Position}
   ) => void
 }
 
 class Purchaser extends React.Component<Props> {
   render() {
-    const { commodities, purchaseCommodity } = this.props
+    const {commodities, purchaseCommodity} = this.props
     return (
       <div>
         {topFive(commodities).map(commies => (
